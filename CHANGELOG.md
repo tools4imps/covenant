@@ -1,21 +1,37 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-10-16)
 
-- Add opt-in verified checkpoints and resume. Reuse only completed worker
-  groups with matching input fingerprints and a fresh passing baseline.
-- Add opt-in selective caller compilation for macro mode. Keep full
-  compilation for macro files and uncertain dependencies.
-- Add `--only` to run selected mutation IDs without renumbering. Focused reports
-  and raw checkpoints retain selection scope. Survivor declarations resolve
-  before selection; known excluded annotations are deferred, while unknown and
-  selected stale entries still fail.
-- Add `--prioritize PATH` with `--fail-fast`. Previous results schedule one
-  known killing test first. A passing or timeout-only hint falls back to the
-  whole suite. No verdict is reused, and kill credit stays partial.
-- Print the passing baseline before the first mutation, and elapsed worker
-  time with each verdict. Keep the existing progress rate, estimate, deadline,
-  and cancellation behavior.
+Macro and protocol mutation, bounded workers and faster repeat runs, from
+Mike Hostetler's first community contribution (#1).
+
+- `mix covenant.mutate --macros` mutates public and private macro bodies and
+  their quoted output. Callers named with `--recompile` are compiled in the
+  order given, before the contract tests; list every direct and transitive
+  caller, providers first, since discovery isn't automatic. A caller that
+  fails to compile makes the mutant `invalid`, with no kill credit. A
+  `--recompile` path can't name a mutation target, even through a symlink.
+- Literal `defimpl` bodies are mutated. Shared implementation and macro owners
+  are kept for ownership and survivor matching.
+- Caller and test binaries are restored exactly, and generated and in-memory
+  modules are cleaned after the baseline, each mutant and the final check.
+- `--max-runtime MS` bounds the whole job (default one hour), and SIGTERM
+  cancels it. Each verdict is saved atomically, so a failed or cancelled job
+  keeps its partial results, and never passes as a complete matrix.
+  `--max-mutants-per-worker N` retires a worker after N verdicts (default 50),
+  once the original suite passes on it, and a fresh VM takes the rest.
+- `--only` runs chosen mutation IDs without renumbering them or claiming full
+  coverage. `--fail-fast` keeps partial credit for kills. `--prioritize PATH`,
+  which requires `--fail-fast`, tries a test that killed the same mutant in an
+  earlier matrix first.
+- `--checkpoint` and `--resume DIR` (`MIX_ENV=test` only) keep only verified,
+  completed worker groups, fingerprinted against source, fixtures, config,
+  dependencies, BEAMs and options. A resumed run always takes a fresh baseline.
+- `--selective-recompile`, with `--macros`, measures compile-time dependencies
+  and recompiles only the affected callers.
+- Progress shows the baseline and elapsed worker time. Final reports use
+  run-specific temporary files, so concurrent runs don't remove each other's.
+- Cleanup and selective dependency tracing need OTP 27 or later.
 
 ## 0.1.0 (2026-10-11)
 

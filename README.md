@@ -13,7 +13,7 @@ Covenant is a Mix library with one runtime dependency, `yaml_elixir`. It needs E
 ```elixir
 # mix.exs
 def deps do
-  [{:covenant, "~> 0.1", only: [:dev, :test], runtime: false}]
+  [{:covenant, "~> 0.2", only: [:dev, :test], runtime: false}]
 end
 ```
 
@@ -648,7 +648,7 @@ mix test               # Elixir 1.18: mix test test/contract
 mix covenant.check     # Covenant against its own Contract
 ```
 
-## Known limits in 0.1
+## Known limits in 0.2
 
 - An exception's `target` can name a public function, a module or a file, not a private function.
 - `--static` reads only literal component names and literal tags, and doesn't credit tests generated in a loop or a conditional.
