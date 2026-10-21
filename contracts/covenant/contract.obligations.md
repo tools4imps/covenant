@@ -13,7 +13,7 @@ problem anchored to a file and line.
 
 ### covenant.contract.I1 — Files map to components by path
 - **scope:** `Covenant.Contract.load/1`, `Covenant.Contract.component_id/2`
-- **must:** read `<app>/<name>.intent.md` as the heavy-form component `<app>.<name>`, `<app>/<name>.obligations.md` as the light form, `system/intent.md` as the component `system`; attach `<app>/<name>.decisions.yml` to its component and keep records whose component has no file; expose obligations by id. A file under the contracts directory that the loader does not read and whose basename looks like a Contract file (it contains `obligation`, `intent`, `decision`, `survivor` or `scope`, in any case and with any extension, `.markdown` included) is an error naming the file at line 1, never silently ignored: a nested `<app>/<sub>/x.obligations.md`, a misnamed `x.obligation.md`, an `x.obligations.markdown`; every other file (`NOTES.md`, `docs/overview.md`, an ADR) is prose and ignored; `README.md`, `*.survivors.yml`, `system/scope.yml` and the files the loader reads are known
+- **must:** read `<app>/<name>.intent.md` as the heavy-form component `<app>.<name>`, `<app>/<name>.obligations.md` as the light form, and also read `intent.md` or `obligations.md` inside a component-id directory as the same forms, with each nested directory adding an id segment (`billing.invoices/refunds/obligations.md` is `billing.invoices.refunds`); read `system/intent.md` as the component `system`; attach the matching named or directory-form `decisions.yml` to its component and keep records whose component has no file; expose obligations by id; allow both layout forms in one Contract and reject duplicate declarations across them. A file under the contracts directory that the loader does not read and whose basename looks like a Contract file (it contains `obligation`, `intent`, `decision`, `survivor` or `scope`, in any case and with any extension, `.markdown` included) is an error naming the file at line 1, never silently ignored: a nested named file `<app>/<sub>/x.obligations.md`, a misnamed `x.obligation.md`, an `x.obligations.markdown`; every other file (`NOTES.md`, `docs/overview.md`, an ADR) is prose and ignored; `README.md`, `*.survivors.yml`, `survivors.yml`, `system/scope.yml` and the files the loader reads are known
 - **kind:** functional
 - **status:** active
 
@@ -31,7 +31,7 @@ problem anchored to a file and line.
 
 ### covenant.contract.I4 — Ids and enumerations are validated and unique
 - **scope:** `Covenant.Parser.Markdown`, `Covenant.Parser.Records`, `Covenant.Contract.load/1`
-- **must:** reject an obligation id outside `<component id>.I<n>`, an unknown `kind` or `status`, a duplicated obligation id, a component declared in both forms, and a record id declared twice in one file or across files, pointing at the second declaration
+- **must:** reject an obligation id outside `<component id>.I<n>`, an unknown `kind` or `status`, a duplicated obligation id, a component declared in both the named and directory forms, and a record id declared twice in one file or across files, pointing at the second declaration
 - **kind:** functional
 - **status:** active
 

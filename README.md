@@ -123,6 +123,28 @@ contracts/
 test/contract/<app>/<component>_contract_test.exs
 ```
 
+Covenant also accepts a component-directory form. It can be mixed with the
+form above, and it lets a component keep its records and tests together:
+
+```text
+test/contract/
+  billing.invoices/
+    obligations.md               light form for billing.invoices
+    decisions.yml
+    survivors.yml
+    invoices_contract_test.exs
+    refunds/
+      obligations.md             light form for billing.invoices.refunds
+      decisions.yml
+      survivors.yml
+      refunds_contract_test.exs
+```
+
+`intent.md` replaces `obligations.md` for the heavy form. Each nested
+directory adds one dot-separated component-id segment. Include this directory
+in `contracts_dir` and `test_paths` when the same tree holds records and tests.
+No layout setting is required, and the default directories do not change.
+
 The full convention, with the nine heavy-form sections and the rules for contract tests, is in [`docs/contract-convention.md`](docs/contract-convention.md). Copy it to your project as `contracts/README.md`: `mix covenant.regen` puts that file in every pack.
 
 Component ids are `<app>.<component>`, and obligation ids are `<component id>.I<n>`. An obligation is a block:
@@ -145,7 +167,7 @@ Parsing is strict. A malformed obligation block is an error at its line, never s
 - an unclosed code fence
 - a known field outside a block, or misspelled (`**Record:**`, `**record**:`)
 - a repeated field
-- a file under `contracts/` named like a Contract file (its name contains obligation, intent, decision, survivor or scope) that Covenant doesn't read, such as a misnamed `x.obligation.md`, an `x.obligations.markdown`, or one in a nested directory. Other files there, such as notes and ADRs, are prose and are ignored
+- a file under `contracts/` named like a Contract file (its name contains obligation, intent, decision, survivor or scope) that Covenant doesn't read, such as a misnamed `x.obligation.md`, an `x.obligations.markdown`, or a nested named file such as `app/sub/x.obligations.md`. Other files there, such as notes and ADRs, are prose and are ignored
 
 `kind` and `status` take one value; nothing after them continues them. A YAML contract file, front matter included, is rejected for multiple documents, `<<` merge keys, repeated keys and fields of the wrong type. A leading BOM is fine, and so are bold-label bullets in prose.
 

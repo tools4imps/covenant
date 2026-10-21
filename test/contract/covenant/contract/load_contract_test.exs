@@ -139,7 +139,64 @@ defmodule Covenant.Contract.LoadContractTest do
              "billing.invoices"
 
     assert Contract.component_id("contracts", "contracts/web/admin.obligations.md") == "web.admin"
+    assert Contract.component_id("contracts", "contracts/web.admin/obligations.md") == "web.admin"
+
+    assert Contract.component_id(
+             "contracts",
+             "contracts/web.admin/session/decisions.yml"
+           ) == "web.admin.session"
+
     assert Contract.component_id("contracts", "contracts/system/intent.md") == "system"
     assert Contract.component_id("contracts", "contracts/system/decisions.yml") == "system"
+  end
+
+  @tag :tmp_dir
+  @tag obligation: "covenant.contract.I1"
+  test "loads component-directory files beside their component tests", %{tmp_dir: dir} do
+    ContractBuilder.write(dir, %{
+      "demo.gadget/obligations.md" => ContractBuilder.light_obligations(),
+      "demo.widget/intent.md" => ContractBuilder.heavy_intent(),
+      "demo.widget/decisions.yml" => ContractBuilder.widget_records(),
+      "demo.widget/history/obligations.md" =>
+        String.replace(ContractBuilder.light_obligations(), "demo.gadget", "demo.widget.history"),
+      "demo.widget/history/contract_test.exs" => "# executable obligation beside its records\n"
+    })
+
+    assert {:ok, contract} = Contract.load(dir)
+
+    assert Contract.component_ids(contract) == [
+             "demo.gadget",
+             "demo.widget",
+             "demo.widget.history"
+           ]
+
+    assert %Component{
+             form: :light,
+             file: gadget_file
+           } = Contract.component(contract, "demo.gadget")
+
+    assert gadget_file == Path.join(dir, "demo.gadget/obligations.md")
+
+    assert %Component{
+             form: :heavy,
+             records_file: records_file,
+             records: records
+           } = Contract.component(contract, "demo.widget")
+
+    assert records_file == Path.join(dir, "demo.widget/decisions.yml")
+    assert Enum.map(records, & &1.id) == ["keep-size"]
+    assert %Component{form: :light} = Contract.component(contract, "demo.widget.history")
+  end
+
+  @tag :tmp_dir
+  @tag obligation: "covenant.contract.I4"
+  test "a component declared in file and directory forms is an error", %{tmp_dir: dir} do
+    ContractBuilder.write(dir, %{
+      "demo/gadget.obligations.md" => ContractBuilder.light_obligations(),
+      "demo.gadget/obligations.md" => ContractBuilder.light_obligations()
+    })
+
+    assert [message] = messages(Contract.load(dir))
+    assert message =~ "component `demo.gadget` is declared twice"
   end
 end

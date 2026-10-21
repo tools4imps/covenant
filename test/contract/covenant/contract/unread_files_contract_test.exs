@@ -16,7 +16,7 @@ defmodule Covenant.Contract.UnreadFilesContractTest do
 
   @tag :tmp_dir
   @tag obligation: "covenant.contract.I1"
-  test "a nested or misnamed Markdown/YAML file is an error naming it, known files are not",
+  test "a misnamed Markdown/YAML file is an error naming it, known files are not",
        %{tmp_dir: dir} do
     ContractBuilder.write(dir, %{
       "demo/gadget.obligations.md" => light(),
@@ -29,6 +29,8 @@ defmodule Covenant.Contract.UnreadFilesContractTest do
     assert {:ok, _} = Contract.load(dir)
 
     ContractBuilder.write(dir, %{
+      "obligations.md" => light(),
+      "system/obligations.md" => light(),
       "demo/sub/other.obligations.md" => light(),
       "demo/widget.obligation.md" => "# nope\n",
       "demo/sub/x.obligations.markdown" => light(),
@@ -38,10 +40,12 @@ defmodule Covenant.Contract.UnreadFilesContractTest do
     assert {:error, _} = result = Contract.load(dir)
 
     assert messages(result) |> Enum.map(&String.replace(&1, dir <> "/", "")) |> Enum.sort() == [
-             "demo/Decisions-2024.txt:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) directly under the contracts directory's app folder, and records are `<app>/<name>.decisions.yml`; rename or move it",
-             "demo/sub/other.obligations.md:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) directly under the contracts directory's app folder, and records are `<app>/<name>.decisions.yml`; rename or move it",
-             "demo/sub/x.obligations.markdown:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) directly under the contracts directory's app folder, and records are `<app>/<name>.decisions.yml`; rename or move it",
-             "demo/widget.obligation.md:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) directly under the contracts directory's app folder, and records are `<app>/<name>.decisions.yml`; rename or move it"
+             "demo/Decisions-2024.txt:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) or `<component-id>/obligations.md` (or `intent.md`), and its records use the matching `decisions.yml` form; rename or move it",
+             "demo/sub/other.obligations.md:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) or `<component-id>/obligations.md` (or `intent.md`), and its records use the matching `decisions.yml` form; rename or move it",
+             "demo/sub/x.obligations.markdown:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) or `<component-id>/obligations.md` (or `intent.md`), and its records use the matching `decisions.yml` form; rename or move it",
+             "demo/widget.obligation.md:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) or `<component-id>/obligations.md` (or `intent.md`), and its records use the matching `decisions.yml` form; rename or move it",
+             "obligations.md:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) or `<component-id>/obligations.md` (or `intent.md`), and its records use the matching `decisions.yml` form; rename or move it",
+             "system/obligations.md:1: this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) or `<component-id>/obligations.md` (or `intent.md`), and its records use the matching `decisions.yml` form; rename or move it"
            ]
   end
 

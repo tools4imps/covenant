@@ -28,6 +28,29 @@ contracts/
 test/contract/<app>/<component>_contract_test.exs   # executable obligations
 ```
 
+The component-directory form keeps one component's records and tests together.
+It may be mixed with the form above:
+
+```text
+test/contract/
+  billing.invoices/
+    obligations.md               # billing.invoices, light form
+    decisions.yml
+    survivors.yml
+    invoices_contract_test.exs
+    refunds/
+      obligations.md             # billing.invoices.refunds
+      decisions.yml
+      survivors.yml
+      refunds_contract_test.exs
+```
+
+Use `intent.md` instead of `obligations.md` for the heavy form. Each nested
+directory adds one dot-separated component-id segment. Set `contracts_dir` and
+`test_paths` to the same parent when records and tests share this tree.
+Covenant detects both component forms without a layout setting. This does not
+change the default directories.
+
 In an umbrella the Contract stays at the root and each app keeps its contract
 tests in `apps/<app>/test/contract/`. Point Covenant at them from
 `config/config.exs`:

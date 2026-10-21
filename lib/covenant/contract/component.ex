@@ -14,9 +14,10 @@ defmodule Covenant.Contract.Component do
   belong to it.
 
   Component ids are `<app>.<component>` and are derived from the file path
-  inside the contracts directory: `billing/invoices.intent.md` is
-  `billing.invoices`. The whole-product `system/intent.md` is the component
-  `system`, with form `:system`. A primitive of the sibling layout
+  inside the contracts directory. `billing/invoices.intent.md` and
+  `billing.invoices/intent.md` both declare `billing.invoices`. Nested
+  component directories add id segments. The whole-product `system/intent.md`
+  is the component `system`, with form `:system`. A primitive of the sibling layout
   (`contract/calc/README.md`, see `Covenant.Parser.Primitive`) is the component
   `calc`, with form `:primitive`, app `"contract"` and the references of its
   `covers` block in `covers`.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Accept `intent.md`, `obligations.md`, `decisions.yml` and `survivors.yml`
+  inside component-id directories, including nested child components. This
+  form can keep contract records and tests together and can be mixed with the
+  existing `<app>/<component>.*` form. No default directory changes.
+
 ## 0.2.0 (2026-10-16)
 
 Macro and protocol mutation, bounded workers and faster repeat runs, from

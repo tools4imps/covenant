@@ -1,7 +1,9 @@
 defmodule Covenant.Mutate.Survivors do
   @moduledoc """
-  The survivor sort: `contracts/<app>/<component>.survivors.yml` annotates
-  every surviving mutant with the judgment a human made about it.
+  The survivor sort annotates every surviving mutant with the judgment a
+  human made about it. It is either
+  `contracts/<app>/<component>.survivors.yml` or `survivors.yml` in a
+  component directory.
 
   ```yaml
   - at: lib/example/counter.ex:29:17
@@ -86,7 +88,8 @@ defmodule Covenant.Mutate.Survivors do
 
   @doc """
   Where a component's annotations live: `<contracts dir>/<app>/<name>.survivors.yml`,
-  or `mutants.md` beside a primitive's README.
+  `survivors.yml` beside a component-directory intent or obligations file, or
+  `mutants.md` beside a primitive's README.
   """
   @spec path(Path.t(), Covenant.Contract.Component.t()) :: Path.t()
   def path(_contracts_dir, %{form: :primitive, file: readme}),
@@ -96,7 +99,15 @@ defmodule Covenant.Mutate.Survivors do
     do: Path.join([contracts_dir, "system", "survivors.yml"])
 
   def path(contracts_dir, component),
-    do: Path.join([contracts_dir, component.app, "#{component.name}.survivors.yml"])
+    do: component_survivors_path(contracts_dir, component)
+
+  defp component_survivors_path(contracts_dir, component) do
+    if Path.basename(component.file) in ["intent.md", "obligations.md"] do
+      Path.join(Path.dirname(component.file), "survivors.yml")
+    else
+      Path.join([contracts_dir, component.app, "#{component.name}.survivors.yml"])
+    end
+  end
 
   @doc "Reads the annotations file (a `mutants.md` by its extension); a missing file is an empty list."
   @spec load(Path.t()) :: {:ok, [Annotation.t()]} | {:error, [Error.t()]}

@@ -11,7 +11,15 @@ defmodule Covenant.Contract do
     <app>/<name>.intent.md      # heavy form   -> component "<app>.<name>"
     <app>/<name>.obligations.md # light form   -> component "<app>.<name>"
     <app>/<name>.decisions.yml  # that component's records
+    <component-id>/intent.md    # directory heavy form
+    <component-id>/obligations.md
+    <component-id>/decisions.yml
   ```
+
+  The two component forms may be used together. In the directory form, each
+  nested directory adds a dot-separated id segment: for example,
+  `billing.invoices/refunds/obligations.md` declares
+  `billing.invoices.refunds`.
 
   With `sibling: dir`, the primitives of the sibling layout under `dir`
   (`contract/<primitive>/README.md`, see `Covenant.Parser.Primitive`) join the
@@ -105,8 +113,8 @@ defmodule Covenant.Contract do
   end
 
   # Files the loader never reads, but whose names say they are Contract files (a
-  # nested directory, a misnamed `x.obligation.md`), would take whole components
-  # with them. Any other file (notes, ADRs) is prose and left alone.
+  # misnamed `x.obligation.md`), would take whole components with them. Any other
+  # file (notes, ADRs) is prose and left alone.
   defp unread(dir) do
     if File.dir?(dir) do
       read = MapSet.new(for({f, _} <- component_files(dir), do: f) ++ record_files(dir))
@@ -123,9 +131,9 @@ defmodule Covenant.Contract do
            Error.new(
              file,
              1,
-             "this file is not read: a component is `<app>/<name>.obligations.md` (or `.intent.md`) " <>
-               "directly under the contracts directory's app folder, and records are " <>
-               "`<app>/<name>.decisions.yml`; rename or move it"
+             "this file is not read: a component is `<app>/<name>.obligations.md` " <>
+               "(or `.intent.md`) or `<component-id>/obligations.md` (or `intent.md`), " <>
+               "and its records use the matching `decisions.yml` form; rename or move it"
            )
          ]}
       end
@@ -177,8 +185,18 @@ defmodule Covenant.Contract do
   end
 
   defp forms(dir) do
-    heavy = dir |> Path.join("*/*.intent.md") |> Path.wildcard() |> Enum.map(&{&1, :heavy})
-    light = dir |> Path.join("*/*.obligations.md") |> Path.wildcard() |> Enum.map(&{&1, :light})
+    heavy =
+      (named_files(dir, "*/*.intent.md") ++ directory_files(dir, "intent.md"))
+      |> Enum.uniq()
+      |> Enum.sort()
+      |> Enum.map(&{&1, :heavy})
+
+    light =
+      (named_files(dir, "*/*.obligations.md") ++ directory_files(dir, "obligations.md"))
+      |> Enum.uniq()
+      |> Enum.sort()
+      |> Enum.map(&{&1, :light})
+
     system = Path.join([dir, "system", "intent.md"])
     system = if File.exists?(system), do: [{system, :system}], else: []
     Enum.sort(heavy ++ light ++ system)
@@ -191,13 +209,31 @@ defmodule Covenant.Contract do
   defp records_in(dir) do
     system = Path.join([dir, "system", "decisions.yml"])
     system = if File.exists?(system), do: [system], else: []
-    Enum.sort(Path.wildcard(Path.join(dir, "*/*.decisions.yml")) ++ system)
+
+    (named_files(dir, "*/*.decisions.yml") ++ directory_files(dir, "decisions.yml") ++ system)
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
+  defp named_files(dir, pattern), do: Path.wildcard(Path.join(dir, pattern))
+
+  defp directory_files(dir, name) do
+    dir
+    |> Path.join("**/#{name}")
+    |> Path.wildcard()
+    |> Enum.filter(fn file ->
+      case Path.split(Path.relative_to(file, dir)) do
+        ["system" | _] -> false
+        [_file] -> false
+        _component_path -> true
+      end
+    end)
   end
 
   @doc """
   Derives a component id from a file path inside the contracts directory:
-  `billing/invoices.intent.md` is `billing.invoices`; anything under
-  `system/` is `system`.
+  `billing/invoices.intent.md` and `billing.invoices/intent.md` are both
+  `billing.invoices`; anything under `system/` is `system`.
   """
   @spec component_id(Path.t(), Path.t()) :: String.t()
   def component_id(dir, file) do
@@ -208,8 +244,12 @@ defmodule Covenant.Contract do
         "system"
 
       parts ->
-        base = parts |> List.last() |> String.split(".") |> hd()
-        (Enum.drop(parts, -1) ++ [base]) |> Enum.join(".")
+        if Path.basename(file) in ["intent.md", "obligations.md", "decisions.yml"] do
+          parts |> Enum.drop(-1) |> Enum.join(".")
+        else
+          base = parts |> List.last() |> String.split(".") |> hd()
+          (Enum.drop(parts, -1) ++ [base]) |> Enum.join(".")
+        end
     end
   end
 
@@ -226,7 +266,8 @@ defmodule Covenant.Contract do
           &Error.new(
             &1.file,
             1,
-            "component `#{id}` is declared twice (also in #{first.file}); use either the intent or the obligations form"
+            "component `#{id}` is declared twice (also in #{first.file}); " <>
+              "declare it once, with either intent or obligations in either layout form"
           )
         )
     end)

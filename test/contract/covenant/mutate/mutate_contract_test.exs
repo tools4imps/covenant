@@ -863,6 +863,11 @@ defmodule Covenant.MutateContractTest do
     assert Survivors.path("contracts", counter) == "contracts/example/counter.survivors.yml"
     assert Survivors.path("contracts", %{form: :system}) == "contracts/system/survivors.yml"
 
+    directory_component = %{counter | file: "contracts/example.counter/obligations.md"}
+
+    assert Survivors.path("contracts", directory_component) ==
+             "contracts/example.counter/survivors.yml"
+
     assert {:error, [error]} = Survivors.load(dir)
     assert error.file == dir
     assert error.message =~ "cannot read file"
