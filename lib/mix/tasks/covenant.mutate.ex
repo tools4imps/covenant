@@ -30,9 +30,10 @@ defmodule Mix.Tasks.Covenant.Mutate do
   sort, and the mutation-blind tests (warn-only). Writes the matrix as JSON.
 
   Exit status 0 when the baseline is green and every survivor is annotated in
-  `contracts/<app>/<component>.survivors.yml`; 1 when the baseline is red, a
-  survivor has no annotation, an annotation is stale, the Contract or the
-  survivors file does not parse, or a worker fails.
+  `contracts/<app>/<component>.survivors.yml`, or in `survivors.yml` beside a
+  component-directory Contract; 1 when the baseline is red, a survivor has no
+  annotation, an annotation is stale, the Contract or the survivors file does
+  not parse, or a worker fails.
 
   ## Options
 
@@ -118,7 +119,8 @@ defmodule Mix.Tasks.Covenant.Mutate do
   ## The survivors file
 
   A mutant no test kills is a survivor, and every survivor needs a judgment in
-  `contracts/<app>/<component>.survivors.yml`: a YAML list with one entry per
+  `contracts/<app>/<component>.survivors.yml`, or in `survivors.yml` beside a
+  component-directory Contract. The file is a YAML list with one entry per
   survivor. The task prints a skeleton for each unsorted survivor.
 
       - at: lib/example/counter.ex:29:17

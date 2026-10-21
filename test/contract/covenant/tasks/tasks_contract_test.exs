@@ -49,6 +49,61 @@ defmodule Covenant.TasksContractTest do
     assert File.exists?(Path.join(@project, "_build/covenant/results/example.json"))
   end
 
+  @tag obligation: "covenant.tasks.I1"
+  test "mix covenant.check accepts records and tests in one component directory" do
+    contracts = Path.join(@project, "tmp/component-contract")
+    component = Path.join(contracts, "example.greeter")
+    File.rm_rf!(contracts)
+    File.mkdir_p!(component)
+    on_exit(fn -> File.rm_rf!(contracts) end)
+
+    File.write!(Path.join(component, "obligations.md"), """
+    ---
+    modules: [Example.Greeter]
+    ---
+    # example.greeter
+
+    ## Purpose
+
+    Greets people.
+
+    ### example.greeter.I1 — Greets a person by name
+    - **scope:** `Example.Greeter.greet/1`
+    - **must:** return a greeting that includes the name
+    - **kind:** functional
+    - **status:** active
+    """)
+
+    File.write!(Path.join(component, "decisions.yml"), "[]\n")
+    File.write!(Path.join(component, "survivors.yml"), "[]\n")
+
+    File.write!(Path.join(component, "greeter_contract_test.exs"), """
+    defmodule Example.ComponentDirectoryContractTest do
+      use Covenant.Case, component: "example.greeter", async: true
+
+      @tag obligation: "example.greeter.I1"
+      test "greets by name" do
+        assert Example.Greeter.greet("Ada") == "Hello, Ada!"
+      end
+    end
+    """)
+
+    {output, status} =
+      mix([
+        "covenant.check",
+        "--contracts",
+        "tmp/component-contract",
+        "--test-path",
+        "tmp/component-contract"
+      ])
+
+    assert status == 0, output
+    assert output =~ "covenant.check: running mix test tmp/component-contract"
+    assert output =~ ~r/example\.greeter\s+1\/1\s+100\.0%/
+    assert output =~ "covenant.check: the Contract holds"
+    assert File.exists?(Path.join(contracts, "coverage.json"))
+  end
+
   @tag obligation: "covenant.tasks.I2"
   test "mix covenant.check --no-run on a corrupted copy of the Contract fails with precise messages" do
     {_, 0} = mix(["covenant.check"])
@@ -578,6 +633,8 @@ defmodule Covenant.TasksContractTest do
     help = Mix.Task.moduledoc(Mix.Tasks.Covenant.Mutate)
 
     assert help =~ "contracts/<app>/<component>.survivors.yml"
+    assert help =~ "`survivors.yml` beside a"
+    assert help =~ "component-directory Contract"
 
     for key <- ~w(at operator mutation sort reason),
         do: assert(help =~ "`#{key}`" or help =~ "#{key}:")

@@ -356,12 +356,13 @@
         "covenant.contract.I1": {
           "failing": 0,
           "kind": "functional",
-          "passing": 6,
+          "passing": 7,
           "status": "active",
           "testable": true,
           "tests": [
-            "test a nested or misnamed Markdown/YAML file is an error naming it, known files are not",
+            "test a misnamed Markdown/YAML file is an error naming it, known files are not",
             "test derives component ids from paths",
+            "test loads component-directory files beside their component tests",
             "test loads the fixture Contract: components, records, ceilings, provenance",
             "test looks obligations up by id",
             "test prose under the contracts directory (notes, ADRs, other YAML) is not an error",
@@ -456,11 +457,12 @@
         "covenant.contract.I4": {
           "failing": 0,
           "kind": "functional",
-          "passing": 6,
+          "passing": 7,
           "status": "active",
           "testable": true,
           "tests": [
             "test a component declared in both forms is an error",
+            "test a component declared in file and directory forms is an error",
             "test a record id declared in two files is an error",
             "test heavy form rejects a duplicated obligation id",
             "test heavy form rejects an obligation id that does not belong to the component",
@@ -1446,7 +1448,7 @@
         "covenant.tasks.I1": {
           "failing": 0,
           "kind": "functional",
-          "passing": 9,
+          "passing": 10,
           "status": "active",
           "testable": true,
           "tests": [
@@ -1454,6 +1456,7 @@
             "test --results-dir naming a file is a clear error, not a File.Error",
             "test a --test-path that matches nothing runs nothing and keeps the last results",
             "test mix covenant.check --results-dir deletes only the Covenant result files it finds there",
+            "test mix covenant.check accepts records and tests in one component directory",
             "test mix covenant.check relays a suite that prints bytes that aren't UTF-8, and keeps UTF-8 intact",
             "test mix covenant.check runs the contract suite, prints coverage, writes coverage.json and exits 0",
             "test mix covenant.check warns about a ceiling whose counter raises, writes coverage.json and exits 0",
@@ -1581,7 +1584,7 @@
       "obligations": {}
     }
   },
-  "covenant": "0.1.0",
+  "covenant": "0.2.0",
   "totals": {
     "active": 105,
     "coverage": 1.0,
